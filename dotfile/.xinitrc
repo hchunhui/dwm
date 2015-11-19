@@ -4,17 +4,21 @@ export LC_CTYPE="zh_CN.UTF-8"
 export XMODIFIERS="@im=fcitx"
 export XIM=fcitx
 export XIM_PROGRAM=fcitx
+export GTK_IM_MODULE=xim
+export QT_IM_MODULE=xim
 killall fcitx
 fcitx &
 
 
 # auto start
 killall stardict
-killall wicd-gtk
 killall tp-button
+killall footswitch
+pkill -f proxy.py
 stardict &
-wicd-gtk &
 /home/hch/work/tp-button/tp-button &
+/home/hch/work/footswitch/footswitch &
+/home/hch/work/goagent-goagent-5558ae2/local/proxy.py &
 
 
 # X defaults
@@ -52,6 +56,10 @@ synclient MiddleButtonAreaBottom=2000
 
 
 # screen output
+#xrandr --output HDMI1 --off
+#xrandr --output eDP1 --auto
+#xrandr --output eDP1 --off
+#xrandr --output HDMI1 --auto
 xrandr --output eDP1 --auto
 xrandr --output VGA1 --right-of eDP1 --auto
 xrandr --output HDMI1 --right-of VGA1 --auto
@@ -73,6 +81,9 @@ feh --bg-fill /usr/share/backgrounds/gnome/Stones.jpg
 # keynav
 killall keynav
 keynav &
+
+# space2ctrl
+# /home/hch/work/Space2Ctrl/s2cctl start
 
 # start dwm
 dwm > /tmp/dwm.log 2>&1
