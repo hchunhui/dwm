@@ -67,9 +67,10 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-fn", font, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "xterm", NULL };
+static const char *termcmd[]  = { "st", NULL };
 static const char *eccmd[] = { "emacsclient", "-n", "-c", "-a", "", NULL};
 static const char *fmcmd[] = { "thunar", NULL };
+static const char *wbcmd[] = { "firefox", NULL };
 static const char *volumedown[] = { "amixer", "set", "Master", "5%-", NULL };
 static const char *volumeup[]   = { "amixer", "set", "Master", "5%+", NULL };
 static const char *mute[]       = { "amixer", "set", "Master", "toggle", NULL };
@@ -80,6 +81,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,			XK_e,	   spawn,	   {.v = eccmd } },
 	{ MODKEY,                       XK_f,      spawn,          {.v = fmcmd } },
+	{ MODKEY,                       XK_w,      spawn,          {.v = wbcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
