@@ -16,15 +16,13 @@ static const Bool showbar           = True;     /* False means no bar */
 static const Bool topbar            = True;     /* False means bottom bar */
 
 /* tagging */
-//static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 static const char *xtags[][10] = {
 	{ "慈", "母", "手", "中", "线", "游", "子", "身", "上", "衣", },
 	{ "临", "行", "密", "密", "缝", "意", "恐", "迟", "迟", "归", },
 	{ "谁", "言", "寸", "草", "心", "报", "得", "三", "春", "晖", },
 };
 
-//static const char *tags[] = { "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸" };
-static const char *tags[] = { "谁", "言", "寸", "草", "心", "报", "得", "三", "春", "晖" };
+static const char *tags[] = { "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸" };
 
 static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
