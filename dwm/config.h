@@ -39,6 +39,8 @@ static const Rule rules[] = {
 	{ "Icedove",  NULL,       NULL,       0,            True,        -1 },
 	{ "Vlc",      NULL,       NULL,       0,            True,        -1 },
 	{ "mpv",      NULL,       NULL,       0,            True,        -1 },
+	{ "avplay",   NULL,       NULL,       0,            True,        -1 },
+	{ NULL,       NULL,       "Xnest",    0,            True,        -1 },
 	{ NULL,       "iptux",    NULL,       0,            True,        -1 },
 };
 
