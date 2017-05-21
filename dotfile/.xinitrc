@@ -66,15 +66,6 @@ xrandr --output HDMI1 --right-of VGA1 --auto
 
 xgamma -rgamma 1.0 -ggamma 0.9 -bgamma 0.8
 
-# status bar
-while true; do
-	line="`cat /sys/class/power_supply/BAT0/status`"
-	line="$line `cat /sys/class/power_supply/BAT0/capacity`%"
-	line="$line `date '+%a %m-%d %H:%M:%S %Z'`"
-	xsetroot -name "$line"
-	sleep 1
-done &
-
 # wallpaper
 feh --bg-fill /usr/share/backgrounds/gnome/Stones.jpg
 
@@ -86,4 +77,5 @@ keynav &
 # /home/hch/work/Space2Ctrl/s2cctl start
 
 # start dwm
+dwm-statusbar &
 dwm > /tmp/dwm.log 2>&1
