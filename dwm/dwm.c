@@ -2332,6 +2332,7 @@ updatesystray(void) {
 	}
 	w = w ? w + systrayspacing : 1;
  	x -= w;
+	XMapRaised(dpy, systray->win);
 	XMoveResizeWindow(dpy, systray->win, x, selmon->by, w, bh);
 	XSync(dpy, False);
 }
