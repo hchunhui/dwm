@@ -30,6 +30,7 @@ static const Rule rules[] = {
 	{ "MPlayer",  NULL,       NULL,       0,            True,        -1 },
 	{ "mplayer2", NULL,       NULL,       0,            True,        -1 },
 	{ "qemu",     NULL,       NULL,       0,            True,        -1 },
+	{ NULL,       NULL,       "QEMU",     0,            True,        -1 },
 	{ "Thunar",   NULL,       "File Operation ", 0,     True,        -1 },
 	{ "Wicd-client", NULL,    NULL,       0,            True,        -1 },
 	{ "StarDict", NULL,       NULL,       0,            True,        -1 },
