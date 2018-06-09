@@ -52,7 +52,9 @@ static const Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "0-0",      tile },    /* first entry is default */
 	{ "><>",      NULL },    /* no layout function means floating behavior */
+	{ "H[]",      deck },
 	{ "[M]",      monocle },
+	{ "HHH",      grid },
 };
 
 /* key definitions */
