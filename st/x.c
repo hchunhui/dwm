@@ -1402,6 +1402,20 @@ xdrawglyph(Glyph g, int x, int y)
 }
 
 void
+xupdatepreeditattrs(int cx, int cy)
+{
+	XPoint spot;
+	XVaNestedList list;
+	spot.x = borderpx + cx * win.cw;
+	spot.y = borderpx + (1 + cy) * win.ch;
+	list = XVaCreateNestedList(0,
+				   XNSpotLocation, &spot,
+				   NULL);
+	XSetICValues(xw.xic, XNPreeditAttributes, list, NULL);
+	XFree(list);
+}
+
+void
 xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
 {
 	Color drawcol;
@@ -1442,6 +1456,7 @@ xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
 
 	/* draw the new one */
 	if (IS_SET(MODE_FOCUSED)) {
+		xupdatepreeditattrs(cx, cy);
 		switch (win.cursor) {
 		case 7: /* st extension: snowman (U+2603) */
 			g.u = 0x2603;
