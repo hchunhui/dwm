@@ -118,6 +118,7 @@ static Key keys[] = {
 	{0,          XF86XK_AudioLowerVolume,      spawn,          {.v = volumedown } },
 	{0,          XF86XK_AudioRaiseVolume,      spawn,          {.v = volumeup } },
 	{0,                 XF86XK_AudioMute,      spawn,          {.v = mute } },
+	{ MODKEY,                       XK_minus,  xtags_cycle,    {0} },
 };
 
 /* button definitions */

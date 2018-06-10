@@ -331,6 +331,9 @@ static DC dc;
 static Monitor *mons = NULL, *selmon = NULL;
 static Window root;
 
+static int xtags_off;
+static void xtags_cycle(const Arg *arg);
+
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
@@ -891,6 +894,12 @@ dirtomon(int dir) {
 	return m;
 }
 
+static void xtags_cycle(const Arg *arg) {
+	xtags_off++;
+	xtags_off %= LENGTH(xtags);
+	drawbars();
+}
+
 void
 drawbar(Monitor *m) {
 	int x;
@@ -908,11 +917,7 @@ drawbar(Monitor *m) {
 	}
 	dc.x = 0;
 
-	if(m->num < LENGTH(xtags) &&
-	   LENGTH(tags) == LENGTH(xtags[m->num]))
-		ctags = xtags[m->num];
-	else
-		ctags = tags;
+	ctags = xtags[(m->num + xtags_off) % LENGTH(xtags)];
 
 	for(i = 0; i < LENGTH(tags); i++) {
 		dc.w = TEXTW(ctags[i]);
