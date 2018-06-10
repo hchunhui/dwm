@@ -1000,6 +1000,7 @@ xinit(int cols, int rows)
 	Window parent;
 	pid_t thispid = getpid();
 	XColor xmousefg, xmousebg;
+	unsigned long fevents;
 
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("can't open display\n");
@@ -1073,6 +1074,10 @@ xinit(int cols, int rows)
 					   XNFocusWindow, xw.win, NULL);
 	if (xw.xic == NULL)
 		die("XCreateIC failed. Could not obtain input method.\n");
+
+	XGetICValues(xw.xic, XNFilterEvents, &fevents, NULL);
+	xw.attrs.event_mask |= fevents;
+	XSelectInput(xw.dpy, xw.win, xw.attrs.event_mask);
 
 	/* white cursor, black outline */
 	cursor = XCreateFontCursor(xw.dpy, mouseshape);
