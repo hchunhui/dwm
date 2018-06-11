@@ -696,6 +696,7 @@ configurenotify(XEvent *e) {
 				XFreePixmap(dpy, dc.drawable);
 			dc.drawable = XCreatePixmap(dpy, root, sw, bh, DefaultDepth(dpy, screen));
 			updatebars();
+			XMapRaised(dpy, systray->win);
 			for(m = mons; m; m = m->next)
 				resizebarwin(m);
 			focus(NULL);
@@ -2420,7 +2421,6 @@ updatesystray(void) {
 	}
 	w = w ? w + systrayspacing : 1;
  	x -= w;
-	XMapRaised(dpy, systray->win);
 	XMoveResizeWindow(dpy, systray->win, x, selmon->by, w, bh);
 	XSync(dpy, False);
 }
