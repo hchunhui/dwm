@@ -3,7 +3,7 @@
 
 include config.mk
 
-SRC = dmenu.c draw.c dmenu_path.c
+SRC = drw.c dmenu.c util.c dmenu_path.c
 OBJ = ${SRC:.c=.o}
 
 all: options dmenu dmenu_path
@@ -15,14 +15,18 @@ options:
 	@echo "CC       = ${CC}"
 
 .c.o:
-	@echo CC -c $<
-	@${CC} -c $< ${CFLAGS}
+	@echo CC $<
+	@${CC} -c ${CFLAGS} $<
 
-${OBJ}: config.mk draw.h
+config.h:
+	@echo creating $@ from config.def.h
+	@cp config.def.h $@
 
-dmenu: dmenu.o draw.o
+${OBJ}: arg.h config.h config.mk drw.h
+
+dmenu: dmenu.o drw.o util.o
 	@echo CC -o $@
-	@${CC} -o $@ dmenu.o draw.o ${LDFLAGS}
+	@${CC} -o $@ dmenu.o drw.o util.o ${LDFLAGS}
 
 dmenu_path: dmenu_path.o
 	@echo CC -o $@
@@ -35,7 +39,9 @@ clean:
 dist: clean
 	@echo creating dist tarball
 	@mkdir -p dmenu-${VERSION}
-	@cp LICENSE Makefile README config.mk dmenu.1 draw.h dmenu_run dmenu-${VERSION}
+	@cp LICENSE Makefile README arg.h config.def.h config.mk dmenu.1 \
+		drw.h util.h dmenu_path dmenu_run ${SRC} \
+		dmenu-${VERSION}
 	@tar -cf dmenu-${VERSION}.tar dmenu-${VERSION}
 	@gzip dmenu-${VERSION}.tar
 	@rm -rf dmenu-${VERSION}
@@ -43,10 +49,10 @@ dist: clean
 install: all
 	@echo installing executables to ${DESTDIR}${PREFIX}/bin
 	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	@cp -f dmenu dmenu_run dmenu_path ${DESTDIR}${PREFIX}/bin
+	@cp -f dmenu dmenu_path dmenu_run ${DESTDIR}${PREFIX}/bin
 	@chmod 755 ${DESTDIR}${PREFIX}/bin/dmenu
-	@chmod 755 ${DESTDIR}${PREFIX}/bin/dmenu_run
 	@chmod 755 ${DESTDIR}${PREFIX}/bin/dmenu_path
+	@chmod 755 ${DESTDIR}${PREFIX}/bin/dmenu_run
 	@echo installing manual pages to ${DESTDIR}${MANPREFIX}/man1
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	@sed "s/VERSION/${VERSION}/g" < dmenu.1 > ${DESTDIR}${MANPREFIX}/man1/dmenu.1
@@ -55,8 +61,8 @@ install: all
 uninstall:
 	@echo removing executables from ${DESTDIR}${PREFIX}/bin
 	@rm -f ${DESTDIR}${PREFIX}/bin/dmenu
-	@rm -f ${DESTDIR}${PREFIX}/bin/dmenu_run
 	@rm -f ${DESTDIR}${PREFIX}/bin/dmenu_path
+	@rm -f ${DESTDIR}${PREFIX}/bin/dmenu_run
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/dmenu.1
 

@@ -1,5 +1,5 @@
 # dmenu version
-VERSION = 4.5
+VERSION = 4.8
 
 # paths
 PREFIX = /usr/local
@@ -12,17 +12,18 @@ X11LIB = /usr/X11R6/lib
 XINERAMALIBS  = -lXinerama
 XINERAMAFLAGS = -DXINERAMA
 
-# Xft, comment if you don't want it
-XFTINC = $(shell pkg-config --cflags xft)
-XFTLIBS = $(shell pkg-config --libs xft)
+# freetype
+FREETYPELIBS = -lfontconfig -lXft
+FREETYPEINC = /usr/include/freetype2
+# OpenBSD (uncomment)
+#FREETYPEINC = ${X11INC}/freetype2
 
 # includes and libs
-INCS = -I${X11INC} ${XFTINC}
-LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${XFTLIBS}
+INCS = -I${X11INC} -I${FREETYPEINC}
+LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS}
 
 # flags
-CPPFLAGS = -D_BSD_SOURCE -D_POSIX_C_SOURCE=2 -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}
-#CFLAGS   = -g -std=c99 -pedantic -Wall -O0 ${INCS} ${CPPFLAGS}
+CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200809L -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}
 CFLAGS   = -std=c99 -pedantic -Wall -Os ${INCS} ${CPPFLAGS}
 LDFLAGS  = -s ${LIBS}
 
