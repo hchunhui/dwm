@@ -101,8 +101,6 @@ static const char *colorname[] = {
 	"#6c71c4",  /* 13: brmagenta*/
 	"#93a1a1",  /* 14: brcyan   */
 	"#fdf6e3",  /* 15: brwhite  */
-
-	[255] = 0,
 };
 
 /* Terminal colors for alternate (light) palette */
@@ -124,8 +122,6 @@ static const char *altcolorname[] = {
 	"#6c71c4",  /* 13: brmagenta*/
 	"#586e75",  /* 14: brcyan   */
 	"#002b36",  /* 15: brwhite  */
-
-	[255] = 0,
 };
 
 
