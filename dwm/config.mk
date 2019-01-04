@@ -20,7 +20,7 @@ XFTLIBS = $(shell pkg-config --libs xft)
 
 # includes and libs
 INCS = -I. -I${X11INC} ${XFTINC}
-LIBS = -lc -L${X11LIB} -lX11 ${XINERAMALIBS} -lXft ${XFTLIBS}
+LIBS = -lc -L${X11LIB} -lX11 ${XINERAMALIBS} -lfontconfig -lXft ${XFTLIBS}
 
 # flags
 CPPFLAGS = -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}

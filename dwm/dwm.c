@@ -129,7 +129,10 @@ typedef struct {
 		int ascent;
 		int descent;
 		int height;
-		XftFont *xfont;
+		int width;
+		XftFont *match;
+		FcFontSet *set;
+		FcPattern *pattern;
 	} font;
 } DC; /* draw context */
 
@@ -982,6 +985,181 @@ drawsquare(Bool filled, Bool empty, Bool invert, XftColor col[ColLast]) {
 		XDrawRectangle(dpy, dc.drawable, dc.gc, dc.x+1, dc.y+1, x, x);
 }
 
+/* Font Ring Cache */
+typedef struct {
+	XftFont *font;
+	long c;
+	int w;
+} Fontcache;
+
+/*
+ * Fontcache is a ring buffer, with frccur as current position and frclen as
+ * the current length of used elements.
+ */
+
+static Fontcache frc[256];
+static int frccur = 0, frclen = 0;
+
+#define UTF_INVALID 0xFFFD
+#define UTF_SIZ     4
+#define BETWEEN(X, A, B)        ((A) <= (X) && (X) <= (B))
+
+static const unsigned char utfbyte[UTF_SIZ + 1] = {0x80,    0, 0xC0, 0xE0, 0xF0};
+static const unsigned char utfmask[UTF_SIZ + 1] = {0xC0, 0x80, 0xE0, 0xF0, 0xF8};
+static const long utfmin[UTF_SIZ + 1] = {       0,    0,  0x80,  0x800,  0x10000};
+static const long utfmax[UTF_SIZ + 1] = {0x10FFFF, 0x7F, 0x7FF, 0xFFFF, 0x10FFFF};
+
+static long
+utf8decodebyte(const char c, size_t *i)
+{
+	for (*i = 0; *i < (UTF_SIZ + 1); ++(*i))
+		if (((unsigned char)c & utfmask[*i]) == utfbyte[*i])
+			return (unsigned char)c & ~utfmask[*i];
+	return 0;
+}
+
+static size_t
+utf8validate(long *u, size_t i)
+{
+	if (!BETWEEN(*u, utfmin[i], utfmax[i]) || BETWEEN(*u, 0xD800, 0xDFFF))
+		*u = UTF_INVALID;
+	for (i = 1; *u > utfmax[i]; ++i)
+		;
+	return i;
+}
+
+static size_t
+utf8decode(const char *c, long *u, size_t clen)
+{
+	size_t i, j, len, type;
+	long udecoded;
+
+	*u = UTF_INVALID;
+	if (!clen)
+		return 0;
+	udecoded = utf8decodebyte(c[0], &len);
+	if (!BETWEEN(len, 1, UTF_SIZ))
+		return 1;
+	for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
+		udecoded = (udecoded << 6) | utf8decodebyte(c[i], &type);
+		if (type)
+			return j;
+	}
+	if (j < len)
+		return 0;
+	*u = udecoded;
+	utf8validate(u, len);
+
+	return len;
+}
+
+int drawstring(XftDraw *draw, XftColor *color, int x, int y, char *s, int len)
+{
+	long u8char;
+	char *u8c;
+	int i;
+	int xp;
+	int u8clen;
+	int frp;
+	XftFont *sfont;
+	FcResult fcres;
+	FcPattern *fcpattern, *fontpattern;
+	FcFontSet *fcsets[] = { NULL };
+	FcCharSet *fccharset;
+	XGlyphInfo ext;
+	int w;
+	/*
+	 * Step through all UTF-8 characters one by one and search in the font
+	 * cache ring buffer, whether there was some font found to display the
+	 * unicode value of that UTF-8 character.
+	 */
+	for (xp = x; len > 0; ) {
+		u8c = s;
+		u8clen = utf8decode(s, &u8char, len);
+		s += u8clen;
+		len -= u8clen;
+
+		sfont = dc.font.match;
+		w = dc.font.width;
+		/*
+		 * Only check the font cache or load new fonts, if the
+		 * characters is not represented in main font.
+		 */
+		if (!XftCharExists(dpy, dc.font.match, u8char)) {
+			frp = frccur;
+			/* Search the font cache. */
+			for (i = 0; i < frclen; i++, frp--) {
+				if (frp <= 0)
+					frp = LENGTH(frc) - 1;
+
+				if (frc[frp].c == u8char)
+					break;
+			}
+			if (i >= frclen) {
+				/*
+				 * Nothing was found in the cache. Now use
+				 * some dozen of Fontconfig calls to get the
+				 * font for one single character.
+				 */
+				fcsets[0] = dc.font.set;
+
+				fcpattern = FcPatternDuplicate(dc.font.pattern);
+				fccharset = FcCharSetCreate();
+
+				FcCharSetAddChar(fccharset, u8char);
+				FcPatternAddCharSet(fcpattern, FC_CHARSET,
+						fccharset);
+				FcPatternAddBool(fcpattern, FC_SCALABLE,
+						FcTrue);
+
+				FcConfigSubstitute(0, fcpattern,
+						FcMatchPattern);
+				FcDefaultSubstitute(fcpattern);
+
+				fontpattern = FcFontSetMatch(0, fcsets,
+						FcTrue, fcpattern, &fcres);
+
+				frccur++;
+				frclen++;
+				if (frccur >= LENGTH(frc))
+					frccur = 0;
+				if (frclen >= LENGTH(frc)) {
+					frclen = LENGTH(frc);
+					XftFontClose(dpy, frc[frccur].font);
+				}
+
+				/*
+				 * Overwrite or create the new cache entry
+				 * entry.
+				 */
+				frc[frccur].font = XftFontOpenPattern(dpy, fontpattern);
+				frc[frccur].c = u8char;
+				XftTextExtentsUtf8(dpy, frc[frccur].font, (XftChar8 *) u8c, u8clen, &ext);
+				frc[frccur].w = ext.xOff;
+
+				FcPatternDestroy(fcpattern);
+				FcCharSetDestroy(fccharset);
+
+				frp = frccur;
+			}
+			sfont = frc[frp].font;
+			w = frc[frp].w;
+		}
+
+		if (draw)
+			XftDrawStringUtf8(draw, color, sfont, xp, y,
+					(FcChar8 *)u8c, u8clen);
+
+		xp += w;
+	}
+	return xp;
+}
+
+int
+textnw(const char *text, unsigned int len) {
+	return drawstring(NULL, NULL, 0, 0, text, len);
+}
+
 void
 drawtext(const char *text, XftColor col[ColLast], Bool invert) {
 	char buf[256];
@@ -1006,7 +1184,7 @@ drawtext(const char *text, XftColor col[ColLast], Bool invert) {
 
 	d = XftDrawCreate(dpy, dc.drawable, DefaultVisual(dpy, screen), DefaultColormap(dpy,screen));
 
-	XftDrawStringUtf8(d, &col[invert ? ColBG : ColFG], dc.font.xfont, x, y, (XftChar8 *) buf, len);
+	drawstring(d, &col[invert ? ColBG : ColFG], x, y, buf, len);
 	XftDrawDestroy(d);
 }
 
@@ -1258,15 +1436,56 @@ incnmaster(const Arg *arg) {
 }
 
 void
-initfont(const char *fontstr) {
+initfont(const char *fontstr)
+{
+	FcPattern *pattern;
+	FcPattern *configured;
+	FcPattern *match;
+	FcResult result;
+	XGlyphInfo ext;
 
-	if(!(dc.font.xfont = XftFontOpenName(dpy,screen,fontstr))
-	&& !(dc.font.xfont = XftFontOpenName(dpy,screen,"fixed")))
-		die("error, cannot load font: '%s'\n", fontstr);
+	pattern = FcNameParse((FcChar8 *)fontstr);
 
-	dc.font.ascent = dc.font.xfont->ascent;
-	dc.font.descent = dc.font.xfont->descent;
+	if (!pattern)
+		die("can't open font %s\n", fontstr);
+
+	/*
+	 * Manually configure instead of calling XftMatchFont
+	 * so that we can use the configured pattern for
+	 * "missing glyph" lookups.
+	 */
+	configured = FcPatternDuplicate(pattern);
+	if (!configured)
+		die("can't open font %s\n", fontstr);
+
+	FcConfigSubstitute(NULL, configured, FcMatchPattern);
+	XftDefaultSubstitute(dpy, XDefaultScreen(dpy), configured);
+
+	match = FcFontMatch(NULL, configured, &result);
+	if (!match) {
+		FcPatternDestroy(configured);
+		die("can't open font %s\n", fontstr);
+	}
+
+	if (!(dc.font.match = XftFontOpenPattern(dpy, match))) {
+		FcPatternDestroy(configured);
+		FcPatternDestroy(match);
+		die("can't open font %s\n", fontstr);
+	}
+
+	dc.font.pattern = configured;
+	dc.font.set = FcFontSort(0, dc.font.pattern, 1, 0, &result);
+
+	dc.font.ascent = dc.font.match->ascent;
+	dc.font.descent = dc.font.match->descent;
+
 	dc.font.height = dc.font.ascent + dc.font.descent;
+
+	XftTextExtentsUtf8(dpy, dc.font.match, (XftChar8 *) " ", 1, &ext);
+	dc.font.width = ext.xOff;
+
+	/* Setting character width and height. */
+	FcPatternDestroy(pattern);
 }
 
 #ifdef XINERAMA
@@ -1984,13 +2203,6 @@ tagmon(const Arg *arg) {
 	if(!selmon->sel || !mons->next)
 		return;
 	sendmon(selmon->sel, dirtomon(arg->i));
-}
-
-int
-textnw(const char *text, unsigned int len) {
-	XGlyphInfo ext;
-	XftTextExtentsUtf8(dpy, dc.font.xfont, (XftChar8 *) text, len, &ext);
-	return ext.xOff;
 }
 
 void
