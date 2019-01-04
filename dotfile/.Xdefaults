@@ -5,9 +5,9 @@ xterm.locale:true
 xterm.utf8: true
 xterm*utf8Title:true
 xterm*fontMenu*fontdefault*Label:Default
-XTerm.vt100.faceName: DejaVu Sans Mono:antialias=True:pixelsize=14
+XTerm.vt100.faceName: Monospace:antialias=True:pixelsize=14
 !XTerm.vt100.faceName: Terminus:style=Bold:antialias=True:pixelsize=14
-XTerm.vt100.faceNameDoublesize:WenQuanYi Zen Hei:antialias=True:pixelsize=14
+!XTerm.vt100.faceNameDoublesize:WenQuanYi Zen Hei:antialias=True:pixelsize=14
 xterm*xftAntialias:true
 xterm*cjkWidth:false
 !xterm*background:black
