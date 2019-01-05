@@ -1008,6 +1008,57 @@ xunloadfonts(void)
 	xunloadfont(&dc.ibfont);
 }
 
+static void initxim(void);
+
+static void
+xim_instantiate(Display *display, XPointer client_data, XPointer call_data)
+{
+	fprintf(stderr, "xim_instantiate\n");
+	initxim();
+}
+
+static void
+xim_destroy(XIM im, XPointer client_data, XPointer call_data)
+{
+	xw.xic = NULL;
+	fprintf(stderr, "xim_destroy\n");
+	XRegisterIMInstantiateCallback(xw.dpy, NULL, NULL, NULL, xim_instantiate, NULL);
+}
+
+
+static const XIMCallback xim_destroy_cb = {
+	.callback = xim_destroy,
+	.client_data = NULL,
+};
+
+static void
+initxim(void)
+{
+	unsigned long fevents;
+
+	if ((xw.xim = XOpenIM(xw.dpy, NULL, NULL, NULL)) == NULL) {
+		XSetLocaleModifiers("@im=local");
+		if ((xw.xim =  XOpenIM(xw.dpy, NULL, NULL, NULL)) == NULL) {
+			XSetLocaleModifiers("@im=");
+			if ((xw.xim = XOpenIM(xw.dpy,
+					NULL, NULL, NULL)) == NULL) {
+				die("XOpenIM failed. Could not open input"
+					" device.\n");
+			}
+		}
+	}
+	xw.xic = XCreateIC(xw.xim, XNInputStyle, XIMPreeditNothing
+					   | XIMStatusNothing, XNClientWindow, xw.win,
+					   XNFocusWindow, xw.win, NULL);
+	if (xw.xic) {
+		XGetICValues(xw.xic, XNFilterEvents, &fevents, NULL);
+		xw.attrs.event_mask |= fevents;
+		XSelectInput(xw.dpy, xw.win, xw.attrs.event_mask);
+
+		XSetIMValues(xw.xim, XNDestroyCallback, &xim_destroy_cb, NULL);
+	}
+}
+
 void
 xinit(int cols, int rows)
 {
@@ -1016,7 +1067,6 @@ xinit(int cols, int rows)
 	Window parent;
 	pid_t thispid = getpid();
 	XColor xmousefg, xmousebg;
-	unsigned long fevents;
 
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("can't open display\n");
@@ -1074,26 +1124,7 @@ xinit(int cols, int rows)
 	xw.draw = XftDrawCreate(xw.dpy, xw.buf, xw.vis, xw.cmap);
 
 	/* input methods */
-	if ((xw.xim = XOpenIM(xw.dpy, NULL, NULL, NULL)) == NULL) {
-		XSetLocaleModifiers("@im=local");
-		if ((xw.xim =  XOpenIM(xw.dpy, NULL, NULL, NULL)) == NULL) {
-			XSetLocaleModifiers("@im=");
-			if ((xw.xim = XOpenIM(xw.dpy,
-					NULL, NULL, NULL)) == NULL) {
-				die("XOpenIM failed. Could not open input"
-					" device.\n");
-			}
-		}
-	}
-	xw.xic = XCreateIC(xw.xim, XNInputStyle, XIMPreeditNothing
-					   | XIMStatusNothing, XNClientWindow, xw.win,
-					   XNFocusWindow, xw.win, NULL);
-	if (xw.xic == NULL)
-		die("XCreateIC failed. Could not obtain input method.\n");
-
-	XGetICValues(xw.xic, XNFilterEvents, &fevents, NULL);
-	xw.attrs.event_mask |= fevents;
-	XSelectInput(xw.dpy, xw.win, xw.attrs.event_mask);
+	initxim();
 
 	/* white cursor, black outline */
 	cursor = XCreateFontCursor(xw.dpy, mouseshape);
@@ -1422,13 +1453,15 @@ xupdatepreeditattrs(int cx, int cy)
 {
 	XPoint spot;
 	XVaNestedList list;
-	spot.x = borderpx + cx * win.cw;
-	spot.y = borderpx + (1 + cy) * win.ch;
-	list = XVaCreateNestedList(0,
-				   XNSpotLocation, &spot,
-				   NULL);
-	XSetICValues(xw.xic, XNPreeditAttributes, list, NULL);
-	XFree(list);
+	if (xw.xic) {
+		spot.x = borderpx + cx * win.cw;
+		spot.y = borderpx + (1 + cy) * win.ch;
+		list = XVaCreateNestedList(0,
+					   XNSpotLocation, &spot,
+					   NULL);
+		XSetICValues(xw.xic, XNPreeditAttributes, list, NULL);
+		XFree(list);
+	}
 }
 
 void
@@ -1472,7 +1505,6 @@ xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
 
 	/* draw the new one */
 	if (IS_SET(MODE_FOCUSED)) {
-		xupdatepreeditattrs(cx, cy);
 		switch (win.cursor) {
 		case 7: /* st extension: snowman (U+2603) */
 			g.u = 0x2603;
@@ -1725,12 +1757,17 @@ kpress(XEvent *ev)
 	int len;
 	Rune c;
 	Status status;
+	XComposeStatus xstatus;
 	Shortcut *bp;
+
 
 	if (IS_SET(MODE_KBDLOCK))
 		return;
-
-	len = XmbLookupString(xw.xic, e, buf, sizeof buf, &ksym, &status);
+	if (xw.xic) {
+		len = XmbLookupString(xw.xic, e, buf, sizeof buf, &ksym, &status);
+	} else {
+		len = XLookupString(e, buf, sizeof buf, &ksym, &xstatus);
+	}
 	/* 1. shortcuts */
 	for (bp = shortcuts; bp < shortcuts + LEN(shortcuts); bp++) {
 		if (ksym == bp->keysym && match(bp->mod, e->state)) {

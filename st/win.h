@@ -36,3 +36,4 @@ void xsetmode(int, unsigned int);
 void xsetpointermotion(int);
 void xsetsel(char *);
 int xstartdraw(void);
+void xupdatepreeditattrs(int cx, int cy);

@@ -2549,6 +2549,11 @@ twrite(const char *buf, int buflen, int show_ctrl)
 		}
 		tputc(u);
 	}
+
+	if (term.scr == 0) {
+		xupdatepreeditattrs(term.c.x, term.c.y);
+	}
+
 	return n;
 }
 
