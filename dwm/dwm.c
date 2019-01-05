@@ -1053,10 +1053,10 @@ utf8decode(const char *c, long *u, size_t clen)
 	return len;
 }
 
-int drawstring(XftDraw *draw, XftColor *color, int x, int y, char *s, int len)
+int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int len)
 {
 	long u8char;
-	char *u8c;
+	const char *u8c;
 	int i;
 	int xp;
 	int u8clen;
