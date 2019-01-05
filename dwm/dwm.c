@@ -1076,6 +1076,11 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 	for (xp = x; len > 0; ) {
 		u8c = s;
 		u8clen = utf8decode(s, &u8char, len);
+		if (u8clen == 0) {
+			fprintf(stderr, "dwm: ???: %s\n", s);
+			break;
+		}
+
 		s += u8clen;
 		len -= u8clen;
 
