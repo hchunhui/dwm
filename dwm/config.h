@@ -40,6 +40,7 @@ static const Rule rules[] = {
 	{ "Vlc",      NULL,       NULL,       0,            True,        -1 },
 	{ "mpv",      NULL,       NULL,       0,            True,        -1 },
 	{ "avplay",   NULL,       NULL,       0,            True,        -1 },
+	{ "Wine",     NULL,       NULL,       0,            True,        -1 },
 	{ NULL,       NULL,       "Xnest",    0,            True,        -1 },
 	{ NULL,       "iptux",    NULL,       0,            True,        -1 },
 };
@@ -74,7 +75,7 @@ static const char *dmenucmd[] = { "dmenu_run", "-fn", font, "-nb", normbgcolor, 
 static const char *termcmd[]  = { "st", NULL };
 static const char *eccmd[] = { "emacsclient", "-n", "-c", "-a", "", NULL};
 static const char *fmcmd[] = { "thunar", NULL };
-static const char *wbcmd[] = { "firefox", NULL };
+static const char *wbcmd[] = { "apulse", "firefox", NULL };
 static const char *volumedown[] = { "amixer", "set", "Master", "5%-", NULL };
 static const char *volumeup[]   = { "amixer", "set", "Master", "5%+", NULL };
 static const char *mute[]       = { "amixer", "set", "Master", "toggle", NULL };
