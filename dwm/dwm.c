@@ -998,7 +998,7 @@ typedef struct {
  */
 
 static Fontcache frc[256];
-static int frccur = 0, frclen = 0;
+static int frccur = -1, frclen = 0;
 
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ     4
@@ -1094,7 +1094,7 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 			frp = frccur;
 			/* Search the font cache. */
 			for (i = 0; i < frclen; i++, frp--) {
-				if (frp <= 0)
+				if (frp < 0)
 					frp = LENGTH(frc) - 1;
 
 				if (frc[frp].c == u8char)
@@ -1128,7 +1128,7 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 				frclen++;
 				if (frccur >= LENGTH(frc))
 					frccur = 0;
-				if (frclen >= LENGTH(frc)) {
+				if (frclen > LENGTH(frc)) {
 					frclen = LENGTH(frc);
 					XftFontClose(dpy, frc[frccur].font);
 				}
