@@ -1039,7 +1039,6 @@ utf8decode(const char *c, long *u, size_t clen)
 int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int len)
 {
 	long u8char;
-	const char *u8c;
 	int i;
 	int xp;
 	int u8clen;
@@ -1047,13 +1046,8 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 	FcResult fcres;
 	XGlyphInfo ext;
 	int w;
-	/*
-	 * Step through all UTF-8 characters one by one and search in the font
-	 * cache ring buffer, whether there was some font found to display the
-	 * unicode value of that UTF-8 character.
-	 */
+
 	for (xp = x; len > 0; ) {
-		u8c = s;
 		u8clen = utf8decode(s, &u8char, len);
 		if (u8clen == 0) {
 			fprintf(stderr, "dwm: ???: %s\n", s);
@@ -1079,23 +1073,25 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 
 			sfont = dc.font.fonts[i];
 			if(sfont) {
-				if (XftCharExists(dpy, sfont, u8char)) {
-					XftTextExtentsUtf8(dpy, sfont, (XftChar8 *) u8c, u8clen, &ext);
+				FT_UInt idx = XftCharIndex(dpy, sfont, u8char);
+				if (idx) {
+					XftGlyphExtents(dpy, sfont, &idx, 1, &ext);
 					w = ext.xOff;
 					if (draw)
-						XftDrawStringUtf8(draw, color, sfont, xp, y,
-								  (FcChar8 *)u8c, u8clen);
+						XftDrawGlyphs(draw, color, sfont, xp, y, &idx, 1);
 					break;
 				}
 			}
 		}
 
 		if (i == dc.font.set->nfont) {
-			XftTextExtentsUtf8(dpy, dc.font.fonts[0], (XftChar8 *) "?", 1, &ext);
+			const char *fb = "?";
+			int l = strlen(fb);
+			XftTextExtentsUtf8(dpy, dc.font.fonts[0], (const XftChar8 *) fb, l, &ext);
 			w = ext.xOff;
 			if (draw)
 				XftDrawStringUtf8(draw, color, dc.font.fonts[0], xp, y,
-						  (FcChar8 *)u8c, u8clen);
+						  (const XftChar8 *) fb, l);
 		}
 
 		xp += w;
