@@ -131,6 +131,7 @@ typedef struct {
 		int height;
 		XftFont **fonts;
 		FcFontSet *set;
+		double fontsize;
 	} font;
 } DC; /* draw context */
 
@@ -1061,13 +1062,13 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 		for (i = 0; i < dc.font.set->nfont; i++) {
 			if (dc.font.fonts[i] == NULL) {
 				FcPattern *m1 = FcPatternDuplicate(dc.font.set->fonts[i]);
+				FcPatternAddDouble(m1, FC_PIXEL_SIZE, dc.font.fontsize);
 				FcConfigSubstitute(NULL, m1, FcMatchPattern);
 				XftDefaultSubstitute(dpy, XDefaultScreen(dpy), m1);
 				FcPattern *m2 = FcFontMatch(NULL, m1, &fcres);
 				if (m2) {
 					dc.font.fonts[i] = XftFontOpenPattern(dpy, m2);
 				}
-				FcPatternDestroy(m2);
 				FcPatternDestroy(m1);
 			}
 
@@ -1394,6 +1395,8 @@ initfont(const char *fontstr)
 	if (!pattern)
 		die("can't open font %s\n", fontstr);
 
+	FcPatternGetDouble(pattern, FC_PIXEL_SIZE, 0, &dc.font.fontsize);
+
 	/*
 	 * Manually configure instead of calling XftMatchFont
 	 * so that we can use the configured pattern for
@@ -1442,7 +1445,6 @@ initfont(const char *fontstr)
 	}
 
 	FcPatternDestroy(configured);
-	FcPatternDestroy(match);
 	FcPatternDestroy(pattern);
 }
 
