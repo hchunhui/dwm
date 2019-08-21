@@ -1037,6 +1037,23 @@ utf8decode(const char *c, long *u, size_t clen)
 	return len;
 }
 
+#define GetFcBool(pattern, what)					\
+	(FcPatternGetBool(pattern, what, 0, &fcbogus) == FcResultMatch)
+
+static int isBogusXft(XftFont *font)
+{
+	int result = 0;
+	if (font != 0) {
+		FcBool fcbogus;
+		if (GetFcBool(font->pattern, FC_COLOR) && fcbogus) {
+			result = 1;
+		} else if (GetFcBool(font->pattern, FC_OUTLINE) && !fcbogus) {
+			result = 1;
+		}
+	}
+	return result;
+}
+
 int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int len)
 {
 	long u8char;
@@ -1068,11 +1085,15 @@ int drawstring(XftDraw *draw, XftColor *color, int x, int y, const char *s, int 
 				FcPattern *m2 = FcFontMatch(NULL, m1, &fcres);
 				if (m2) {
 					dc.font.fonts[i] = XftFontOpenPattern(dpy, m2);
+					if (isBogusXft(dc.font.fonts[i])) {
+						XftFontClose(dpy, dc.font.fonts[i]);
+						dc.font.fonts[i] = (void *) 1;
+					}
 				}
 				FcPatternDestroy(m1);
 			}
 
-			sfont = dc.font.fonts[i];
+			sfont = dc.font.fonts[i] != (void *) 1 ? dc.font.fonts[i] : NULL;
 			if(sfont) {
 				FT_UInt idx = XftCharIndex(dpy, sfont, u8char);
 				if (idx) {
