@@ -40,6 +40,7 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 #include <X11/Xft/Xft.h>
+#include <X11/XF86keysym.h>
 
 #include "drw.h"
 #include "util.h"
@@ -1199,6 +1200,11 @@ manage(Window w, XWindowAttributes *wa)
 	c->oldbw = wa->border_width;
 
 	updatetitle(c);
+#if 1
+	XClassHint ch = { NULL, NULL };
+	XGetClassHint(dpy, c->win, &ch);
+	fprintf(stderr, "[INFO] name %s class %s instance %s\n", c->name, ch.res_class, ch.res_name);
+#endif
 	if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
 		c->mon = t->mon;
 		c->tags = t->tags;
