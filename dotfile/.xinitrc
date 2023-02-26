@@ -1,81 +1,65 @@
 # input method
 # export LANG="eo.UTF-8"
 export LC_CTYPE="zh_CN.UTF-8"
-export XMODIFIERS="@im=fcitx"
-export XIM=fcitx
-export XIM_PROGRAM=fcitx
-export GTK_IM_MODULE=xim
-export QT_IM_MODULE=xim
-killall fcitx
-fcitx &
-
+export XMODIFIERS="@im=ibus"
+export GTK_IM_MODULE=ibus
+export QT_IM_MODULE=ibus
+ibus-daemon -drx #--panel=/usr/local/bin/ibus-ui
 
 # auto start
-killall stardict
-killall tp-button
+killall goldendict
+killall sz-button
 killall footswitch
-pkill -f proxy.py
-stardict &
-/home/hch/work/tp-button/tp-button &
+goldendict &
+/home/hch/work/tp-button/sz-button &
 /home/hch/work/footswitch/footswitch &
-/home/hch/work/goagent-goagent-5558ae2/local/proxy.py &
-
 
 # X defaults
 xrdb ~/.Xdefaults
 
-
 # touch pad
-## Acer
-#synclient TapButton1=1
-#synclient TapButton2=2
-#synclient TapButton3=3
-#synclient VertEdgeScroll=1
-
-## Thinkpad E440
-# 1 finger = left click, 2 finger = right click, 3 finger = middle click
-synclient TapButton1=0
-synclient TapButton2=0
-synclient TapButton3=0
-synclient ClickFinger1=1
-synclient ClickFinger2=3
-synclient ClickFinger3=2
-# enable horizontal two-finger scrolling (vertical is enabled by default)
+synclient TapButton1=1
+synclient TapButton2=3
+synclient TapButton3=2
+synclient VertEdgeScroll=0
 synclient HorizTwoFingerScroll=1
-# disable the top edge of the touchpad to prevent jittering when using the trackpoint
-synclient AreaTopEdge=2500
-# configure trackpoint buttons
-synclient RightButtonAreaLeft=3700
-synclient RightButtonAreaRight=4790
-synclient RightButtonAreaTop=1550
-synclient RightButtonAreaBottom=2000
-synclient MiddleButtonAreaLeft=2900
-synclient MiddleButtonAreaRight=3500
-synclient MiddleButtonAreaTop=1550
-synclient MiddleButtonAreaBottom=2000
-
+synclient PalmDetect=1
+synclient PalmMinWidth=10
+synclient PalmMinZ=50
 
 # screen output
+#xrandr --output eDP-1 --gamma 0.75:0.75:0.75
 #xrandr --output HDMI1 --off
 #xrandr --output eDP1 --auto
 #xrandr --output eDP1 --off
 #xrandr --output HDMI1 --auto
-xrandr --output eDP1 --auto
-xrandr --output VGA1 --right-of eDP1 --auto
-xrandr --output HDMI1 --right-of VGA1 --auto
+xrandr --output eDP-1 --auto
+xrandr --output HDMI-1 --left-of eDP-1 --auto --mode 1920x1080
+xrandr --output DP-1 --left-of HDMI-1 --auto
 
-xgamma -rgamma 1.0 -ggamma 0.9 -bgamma 0.8
+#xgamma -rgamma 1.0 -ggamma 0.9 -bgamma 0.8
 
 # wallpaper
-feh --bg-fill /usr/share/backgrounds/gnome/Stones.jpg
+#feh --bg-fill /usr/share/backgrounds/gnome/Stones.jpg
+feh --bg-fill ~/Downloads/Blind_monks_examining_an_elephant.jpg
 
 # keynav
 killall keynav
 keynav &
+
+killall dunst
+dunst &
+
+killall polkit-gnome-authentication-agent-1
+/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 &
+
+killall udiskie
+udiskie --tray --no-notify --no-automount &
 
 # space2ctrl
 # /home/hch/work/Space2Ctrl/s2cctl start
 
 # start dwm
 dwm-statusbar &
-dwm > /tmp/dwm.log 2>&1
+mv /tmp/dwm.log /tmp/dwm.log.old
+COLORTERM=truecolor dwm > /tmp/dwm.log 2>&1
