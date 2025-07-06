@@ -50,14 +50,21 @@ keynav &
 killall dunst
 dunst &
 
-killall polkit-gnome-authentication-agent-1
-/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 &
+killall polkit-mate-authentication-agent-1
+/usr/libexec/polkit-mate-authentication-agent-1 &
 
 killall udiskie
 udiskie --tray --no-notify --no-automount &
 
 # space2ctrl
 # /home/hch/work/Space2Ctrl/s2cctl start
+
+sudo mount /external &
+ssvpn &
+
+#wifi.sh foobar &
+
+picom &
 
 # start dwm
 dwm-statusbar &

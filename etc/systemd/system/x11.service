@@ -1,0 +1,14 @@
+[Unit]
+Description=X11
+ConditionVirtualization=!microsoft
+After=systemd-user-sessions.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=-/bin/su - hch -c "exec xinit :0 -- vt7"
+#ExecStart=-/bin/su - hch -c "exec dbus-run-session -- xinit :0 -- vt7"
+
+[Install]
+WantedBy=multi-user.target
